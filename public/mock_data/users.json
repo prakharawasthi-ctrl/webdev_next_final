@@ -1,0 +1,20 @@
+
+[
+    {
+      "id": 1,
+      "username": "alice_johnson",
+      "email": "alice.johnson@example.com",
+      "role": "admin",
+      "date_created": "2023-04-10",
+      "last_login": "2024-12-20"
+    },
+    {
+      "id": 2,
+      "username": "bob_smith",
+      "email": "bob.smith@example.com",
+      "role": "user",
+      "date_created": "2023-05-01",
+      "last_login": "2024-12-21"
+    }
+  ]
+  

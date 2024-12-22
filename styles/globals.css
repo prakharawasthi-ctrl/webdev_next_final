@@ -1,0 +1,131 @@
+/* Import Tailwind's base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Custom base styles can go here */
+}
+
+/* Resetting default margins and paddings, ensuring full height */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: row; /* Align navbar on the left, table on the right */
+  align-items: flex-start;
+  justify-content: flex-start;
+  background-color: #f0f0f0;
+}
+
+/* Left Sidebar (Navbar) */
+nav {
+  width: 250px; /* You can adjust the width of the sidebar */
+  background-color:white;
+  color:gray;
+  padding: 20px;
+  height: 100vh; /* Ensures the navbar covers the entire height of the viewport */
+}
+
+nav h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+nav ul li {
+  margin-bottom: 15px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+nav ul li:hover {
+  color: rgb(184, 184, 184); /* Highlight on hover */
+}
+
+/* Right Section (Table Area) */
+main {
+  flex: 1;
+  padding: 20px;
+  overflow-x: auto; /* Ensures the table can be scrolled horizontally */
+}
+
+header {
+  background-color: #282c34;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Table Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+table, th, td {
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 12px 20px;
+  text-align: left;
+}
+
+th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+td {
+  background-color: #fff;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+td span {
+  margin-right: 10px;
+}
+
+/* Status Indicator Circle */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: red; /* Default to red */
+}
+
+.status-indicator.green {
+  background-color: green;
+}
+
+/* Footer Styles (removed or hidden) */
+footer {
+  background-color: #282c34;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: none; /* Hides the footer */
+}
