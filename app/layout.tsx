@@ -2,14 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import json_data from '../public/mock_data/students.json';
+import userData from '../public/mock_data/users.json';
 import '../styles/globals.css';
+import { AiOutlineDashboard, AiOutlineUser, AiOutlineBook, AiOutlineQuestionCircle, AiOutlineFileText, AiOutlineSetting ,AiOutlineSearch, AiOutlineFilter, AiOutlineBell} from 'react-icons/ai';
 
 const Layout: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedCohort, setSelectedCohort] = useState<string>('');
   const [filteredData, setFilteredData] = useState(json_data);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null); // Specify `any` or `null`
   const [newStudent, setNewStudent] = useState({
+    id: '',
     student_name: '',
     cohort: '',
     courses: '',
@@ -19,11 +24,9 @@ const Layout: React.FC = () => {
     class: '',
   });
 
-  // Existing code for classOptions and cohortOptions remains the same
   const classOptions = [...new Set(json_data.map((student) => student.class))];
   const cohortOptions = [...new Set(json_data.map((student) => student.cohort))];
 
-  // Existing useEffect for filtering remains the same
   useEffect(() => {
     let data = json_data;
     if (selectedClass) {
@@ -43,30 +46,81 @@ const Layout: React.FC = () => {
     });
   };
 
+  const handleDelete = async (student: any) => {
+    if (window.confirm('Are you sure you want to delete this student?')) {
+      try {
+        const response = await fetch(`/api/students/delete/${student.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete student');
+        }
+
+        // Update the local state by removing the deleted student
+        setFilteredData(filteredData.filter((s) => s.id !== student.id)); // Ensure the correct student is removed
+        alert('Student deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        alert('Failed to delete student. Please try again.');
+      }
+    }
+  };
+
+  const handleUpdate = (student: any) => {
+    setSelectedStudent(student);
+    setNewStudent(student);
+    setIsUpdateMode(true);
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
+    if (!selectedStudent && isUpdateMode) {
+      alert('No student selected for update.');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/students/add', {  // Update this URL
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newStudent),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to add student');
+      if (isUpdateMode && selectedStudent) {
+        const response = await fetch(`/api/students/update/${selectedStudent.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newStudent),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update student');
+        }
+
+        // Update the local state
+        setFilteredData(filteredData.map((student) =>
+          student.id === selectedStudent.id ? newStudent : student
+        ));
+        alert('Student updated successfully!');
+      } else {
+        const response = await fetch('/api/students/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newStudent),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add student');
+        }
+
+        setFilteredData([...filteredData, newStudent]);
+        alert('Student added successfully!');
       }
-  
-      const result = await response.json();
-      console.log('Student added successfully:', result);
-  
-      // Update the local data state
-      setFilteredData([...filteredData, newStudent]);
-  
+
       // Reset form and close modal
       setNewStudent({
+        id: '',
         student_name: '',
         cohort: '',
         courses: '',
@@ -76,14 +130,13 @@ const Layout: React.FC = () => {
         class: '',
       });
       setIsModalOpen(false);
-  
-      alert('Student added successfully!');
+      setIsUpdateMode(false);
+      setSelectedStudent(null);
     } catch (error) {
-      console.error('Error adding student:', error);
-      alert('Failed to add student. Please try again.');
+      console.error('Error:', error);
+      alert(`Failed to ${isUpdateMode ? 'update' : 'add'} student. Please try again.`);
     }
   };
-  // =================================
 
   return (
     <html lang="en">
@@ -95,58 +148,119 @@ const Layout: React.FC = () => {
       <body className="flex min-h-screen bg-gray-100">
         {/* Left Sidebar / Navbar */}
         <nav className="w-1/4 bg-white text-gray-700 p-6 h-full">
-          <h2 className="text-2xl font-bold mb-8 text-gray-800">Quyl</h2>
-          <ul>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Dashboard</li>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Students</li>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Chapter</li>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Help</li>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Reports</li>
-            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded">Settings</li>
-          </ul>
-        </nav>
+  <h2 className="text-2xl font-bold mb-8 text-gray-800">Quyl</h2>
+  <ul>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineDashboard size={20} className="mr-4" /> Dashboard
+    </li>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineUser size={20} className="mr-4" /> Students
+    </li>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineBook size={20} className="mr-4" /> Chapter
+    </li>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineQuestionCircle size={20} className="mr-4" /> Help
+    </li>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineFileText size={20} className="mr-4" /> Reports
+    </li>
+    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+      <AiOutlineSetting size={20} className="mr-4" /> Settings
+    </li>
+  </ul>
+</nav>
 
-        {/* Main Content Area (Table and Filters) */}
+        {/* Main Content Area */}
         <main className="flex-1 p-8 overflow-x-auto">
-          <header className="mb-8">
-            {/* Filters (Dropdowns) */}
-            <div className="flex space-x-4 mb-4">
-              {/* Class Dropdown */}
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="p-2 border rounded bg-white text-gray-700 text-sm"
-              >
-                <option value="">Select Class</option>
-                {classOptions.map((classOption, index) => (
-                  <option key={index} value={classOption}>
-                    {classOption}
-                  </option>
-                ))}
-              </select>
+          <header className="mb-0">
+            <header className="mb-0">
+              <header className="mb-0">
+                <div className="flex items-center justify-between">
+                  {/* Search Input */}
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="search-bar"
+                    />
+                    <AiOutlineSearch size={24} className="text-gray-600" />
+                  </div>
 
-              {/* Cohort Dropdown */}
-              <select
-                value={selectedCohort}
-                onChange={(e) => setSelectedCohort(e.target.value)}
-                className="p-2 border rounded bg-white text-gray-700 text-sm"
-              >
-                <option value="">Select Cohort</option>
-                {cohortOptions.map((cohortOption, index) => (
-                  <option key={index} value={cohortOption}>
-                    {cohortOption}
-                  </option>
-                ))}
-              </select>
 
-              {/* Add Student Button */}
+
+                  {/* Icons */}
+                  <div className="flex space-x-4"> {/* Reduced space between icons */}
+                    <AiOutlineQuestionCircle size={24} className="text-gray-600 cursor-pointer" />
+                    <AiOutlineFilter size={24} className="text-gray-600 cursor-pointer" />
+                    <AiOutlineBell size={24} className="text-gray-600 cursor-pointer" />
+                  </div>
+
+                  {/* User Profile */}
+                  <div className="flex items-center space-x-2"> {/* Reduced space between profile and icons */}
+                    <img
+                      src={userData.url} // Using the avatar URL
+                      alt="User Profile"
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <span className="text-gray-700 text-sm">{userData.name || 'User'}</span> {/* Smaller text size */}
+                  </div>
+                </div>
+              </header>
+
+            </header>
+
+            <div className="controls-container">
+              <div className="dropdowns">
+                <select
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  className="p-2 border rounded bg-white text-gray-700 text-sm"
+                >
+                  <option value="">Select Class</option>
+                  {classOptions.map((classOption, index) => (
+                    <option key={index} value={classOption}>
+                      {classOption}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedCohort}
+                  onChange={(e) => setSelectedCohort(e.target.value)}
+                  className="p-2 border rounded bg-white text-gray-700 text-sm"
+                >
+                  <option value="">Select Cohort</option>
+                  {cohortOptions.map((cohortOption, index) => (
+                    <option key={index} value={cohortOption}>
+                      {cohortOption}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-2 bg-white text-gray-700 rounded hover:bg-gray-500 text-sm flex justify-end"
+                onClick={() => {
+                  setIsUpdateMode(false);
+                  setSelectedStudent(null);
+                  setNewStudent({
+                    id: '',
+                    student_name: '',
+                    cohort: '',
+                    courses: '',
+                    date_joined: '',
+                    last_login: '',
+                    status: '',
+                    class: '',
+                  });
+                  setIsModalOpen(true);
+                }}
+                className="p-2 bg-white text-gray-700 rounded hover:bg-gray-500 text-sm"
               >
                 + Add Student
               </button>
             </div>
+
           </header>
 
           {/* Table */}
@@ -160,102 +274,137 @@ const Layout: React.FC = () => {
                 <th className="border px-4 py-3 text-left text-gray-700">Last Login</th>
                 <th className="border px-4 py-3 text-left text-gray-700">Status</th>
                 <th className="border px-4 py-3 text-left text-gray-700">Class</th>
+                <th className="border px-4 py-3 text-left text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((student, index) => (
-                <tr key={index} className="hover:bg-gray-100">
+              {filteredData.map((student) => (
+                <tr key={student.id}>
                   <td className="border px-4 py-2">{student.student_name}</td>
                   <td className="border px-4 py-2">{student.cohort}</td>
                   <td className="border px-4 py-2">{student.courses}</td>
                   <td className="border px-4 py-2">{student.date_joined}</td>
                   <td className="border px-4 py-2">{student.last_login}</td>
-                  <td className="border px-4 py-2">{student.status}</td>
+                  <td className="border px-4 py-2"> <span
+                    className={`inline-block w-3 h-3 rounded-full ${student.status === 'green' ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                  ></span></td>
                   <td className="border px-4 py-2">{student.class}</td>
+                  <td className="border px-4 py-2">
+                    <button
+                      onClick={() => handleUpdate(student)}
+                      className="text-blue-500 hover:underline mr-4"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student)}
+                      className="text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Add Student Modal */}
+          {/* Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-10">
-              <div className="bg-white p-8 rounded shadow-lg w-96">
-                <h2 className="text-xl font-semibold mb-4">Add New Student</h2>
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded shadow-lg w-1/3">
+                <h3 className="text-2xl mb-4">{isUpdateMode ? 'Update Student' : 'Add Student'}</h3>
                 <form onSubmit={handleSubmit}>
-                  <label className="block text-sm font-medium mb-2">Student Name</label>
-                  <input
-                    type="text"
-                    name="student_name"
-                    value={newStudent.student_name}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Cohort</label>
-                  <input
-                    type="text"
-                    name="cohort"
-                    value={newStudent.cohort}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Courses</label>
-                  <input
-                    type="text"
-                    name="courses"
-                    value={newStudent.courses}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Date Joined</label>
-                  <input
-                    type="date"
-                    name="date_joined"
-                    value={newStudent.date_joined}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Last Login</label>
-                  <input
-                    type="date"
-                    name="last_login"
-                    value={newStudent.last_login}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Status</label>
-                  <input
-                    type="text"
-                    name="status"
-                    value={newStudent.status}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <label className="block text-sm font-medium mb-2">Class</label>
-                  <input
-                    type="text"
-                    name="class"
-                    value={newStudent.class}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 p-2 border rounded"
-                    required
-                  />
-                  <div className="mt-4 flex justify-end">
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Student Name</label>
+                    <input
+                      type="text"
+                      name="student_name"
+                      value={newStudent.student_name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Cohort</label>
+                    <input
+                      type="text"
+                      name="cohort"
+                      value={newStudent.cohort}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Courses</label>
+                    <input
+                      type="text"
+                      name="courses"
+                      value={newStudent.courses}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Date Joined</label>
+                    <input
+                      type="date"
+                      name="date_joined"
+                      value={newStudent.date_joined}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Last Login</label>
+                    <input
+                      type="date"
+                      name="last_login"
+                      value={newStudent.last_login}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Status</label>
+                    <input
+                      type="text"
+                      name="status"
+                      value={newStudent.status}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Class</label>
+                    <input
+                      type="text"
+                      name="class"
+                      value={newStudent.class}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-4">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                      className="px-4 py-2 border rounded bg-gray-300"
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-                      Save Student
+                    <button
+                      type="submit"
+                      className="px-4 py-2 border rounded bg-blue-500 text-white"
+                    >
+                      {isUpdateMode ? 'Update' : 'Add'}
                     </button>
                   </div>
                 </form>

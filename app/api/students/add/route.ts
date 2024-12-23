@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const studentsFilePath = path.join(process.cwd(), 'public/mock_data/students.json');
     const newStudent = await request.json();
-
+    console.log(newStudent);
     // Validate the new student data
     if (!newStudent.student_name || !newStudent.cohort || !newStudent.class) {
       return NextResponse.json(
