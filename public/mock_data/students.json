@@ -1,25 +1,5 @@
 [
   {
-    "id": "1",
-    "student_name": "John Doe",
-    "cohort": "Cohort A",
-    "courses": "Mathematics, Physics, Computer Science",
-    "date_joined": "2023-01-15",
-    "last_login": "2024-12-21",
-    "status": "green",
-    "class": "1A"
-  },
-  {
-    "id": "2",
-    "student_name": "Jane Smith",
-    "cohort": "Cohort B",
-    "courses": "Chemistry, Biology, English",
-    "date_joined": "2023-02-20",
-    "last_login": "2024-12-18",
-    "status": "red",
-    "class": "2B"
-  },
-  {
     "id": "3",
     "student_name": "Mike Johnson",
     "cohort": "Cohort A",
@@ -230,6 +210,3 @@
     "class": "8"
   }
 ]
-
-
-

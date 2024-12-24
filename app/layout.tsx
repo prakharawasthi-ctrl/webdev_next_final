@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import json_data from '../public/mock_data/students.json';
 import userData from '../public/mock_data/users.json';
 import '../styles/globals.css';
-import { AiOutlineDashboard, AiOutlineUser, AiOutlineBook, AiOutlineQuestionCircle, AiOutlineFileText, AiOutlineSetting ,AiOutlineSearch, AiOutlineFilter, AiOutlineBell} from 'react-icons/ai';
+import { AiOutlineDashboard, AiOutlineUser, AiOutlineBook, AiOutlineQuestionCircle, AiOutlineFileText, AiOutlineSetting, AiOutlineSearch, AiOutlineFilter, AiOutlineBell } from 'react-icons/ai';
 
 const Layout: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<string>('');
@@ -57,8 +57,7 @@ const Layout: React.FC = () => {
           throw new Error('Failed to delete student');
         }
 
-        // Update the local state by removing the deleted student
-        setFilteredData(filteredData.filter((s) => s.id !== student.id)); // Ensure the correct student is removed
+        setFilteredData(filteredData.filter((s) => s.id !== student.id));
         alert('Student deleted successfully!');
       } catch (error) {
         console.error('Error deleting student:', error);
@@ -84,24 +83,33 @@ const Layout: React.FC = () => {
 
     try {
       if (isUpdateMode && selectedStudent) {
-        const response = await fetch(`/api/students/update/${selectedStudent.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newStudent),
-        });
+        try {
+          const response = await fetch(`/api/students/update/${selectedStudent.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newStudent),
+          });
 
-        if (!response.ok) {
-          throw new Error('Failed to update student');
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update student');
+          }
+
+          const { updatedStudent } = await response.json();
+
+          setFilteredData(filteredData.map((student) =>
+            student.id === selectedStudent.id ? { ...student, ...updatedStudent } : student
+          ));
+
+          alert('Student updated successfully!');
+        } catch (error) {
+          console.error('Error updating student:', error.message);
+          alert(error.message || 'An unexpected error occurred.');
         }
-
-        // Update the local state
-        setFilteredData(filteredData.map((student) =>
-          student.id === selectedStudent.id ? newStudent : student
-        ));
-        alert('Student updated successfully!');
-      } else {
+      }
+      else {
         const response = await fetch('/api/students/add', {
           method: 'POST',
           headers: {
@@ -148,28 +156,28 @@ const Layout: React.FC = () => {
       <body className="flex min-h-screen bg-gray-100">
         {/* Left Sidebar / Navbar */}
         <nav className="w-1/4 bg-white text-gray-700 p-6 h-full">
-  <h2 className="text-2xl font-bold mb-8 text-gray-800">Quyl</h2>
-  <ul>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineDashboard size={20} className="mr-4" /> Dashboard
-    </li>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineUser size={20} className="mr-4" /> Students
-    </li>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineBook size={20} className="mr-4" /> Chapter
-    </li>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineQuestionCircle size={20} className="mr-4" /> Help
-    </li>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineFileText size={20} className="mr-4" /> Reports
-    </li>
-    <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
-      <AiOutlineSetting size={20} className="mr-4" /> Settings
-    </li>
-  </ul>
-</nav>
+          <h2 className="text-2xl font-bold mb-8 text-gray-800">Quyl</h2>
+          <ul>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineDashboard size={20} className="mr-4" /> Dashboard
+            </li>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineUser size={20} className="mr-4" /> Students
+            </li>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineBook size={20} className="mr-4" /> Chapter
+            </li>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineQuestionCircle size={20} className="mr-4" /> Help
+            </li>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineFileText size={20} className="mr-4" /> Reports
+            </li>
+            <li className="mb-6 text-lg hover:bg-gray-200 cursor-pointer p-2 rounded flex items-center">
+              <AiOutlineSetting size={20} className="mr-4" /> Settings
+            </li>
+          </ul>
+        </nav>
 
         {/* Main Content Area */}
         <main className="flex-1 p-8 overflow-x-auto">
