@@ -2,7 +2,7 @@ import { NextConfig } from 'next';
 
 const config: NextConfig = {
   experimental: {
-    appDir: true,
+    // appDir: true,
   },
 };
 
